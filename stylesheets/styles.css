@@ -13,10 +13,7 @@ body {
   height: 100%;
 }
 
-.email a {
-  color: white;
-  text-decoration: none;
-  cursor: pointer;
+.email {
   font-size: 72pt;
   font-family: 'myriad pro', helvetica, georgia,serif; 
   text-align: center;
@@ -25,6 +22,12 @@ body {
   margin: auto;
   display: block;
   margin-top: 150px;
+}
+
+.email a {
+  text-decoration: none;
+  cursor: pointer;
+  color: white;
 }
 
 .links {
