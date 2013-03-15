@@ -1,41 +1,13 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>da.nielpie.rs</title>
+---
+layout: default
+title: The random writings of Daniel Piers
+---
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-  </head>
-  <body>
-    <div class="container">
-        <div class="email">
-          <a href="mailto:d@nielpie.rs">d@nielpie.rs</a>
-        </div>
-
-        <div class="links">
-          <a href="https://github.com/dpiers">// GitHub</a>
-          <a href="https://twitter.com/danielpiers">  // Twitter</a>
-          <a href="https://facebook.com/danielpiers">  // Facebook</a>
-        </div>
-    </div>
-
-    <script type="text/javascript">
-
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-37456547-1']);
-      _gaq.push(['_setDomainName', 'nielpie.rs']);
-      _gaq.push(['_trackPageview']);
-
-      (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
-
-    </script>
-  </body>
-</html>
+<ul id="posts" class="twelve columns offset-by-four">
+  {% for post in site.posts %}
+    <li>
+      <a class="nine columns" href="{{ post.url }}">{{ post.title }}</a>
+      <span class="two columns">{{ post.date | date: "%b %Y" }}</span>
+    </li>
+  {% endfor %}
+</ul>
