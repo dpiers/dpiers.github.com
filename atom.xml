@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+ 
+ <title>danielpiers</title>
+ <link href="http://dpiers.github.com/atom.xml" rel="self"/>
+ <link href="http://dpiers.github.com/"/>
+ <updated>2013-05-20T12:56:33-07:00</updated>
+ <id>http://dpiers.github.com</id>
+ <author>
+   <name>danielpiers</name>
+   <email>d@nielpie.rs</email>
+ </author>
+
+ 
+ <entry>
+   <title>Things Happen That Way</title>
+   <link href="http://dpiers.github.com/things-happen"/>
+   <updated>2013-05-17T00:00:00-07:00</updated>
+   <id>http:/dpiers.github.com/things-happen</id>
+   <content type="html">&lt;p&gt;When I was a junior in high school, my older brother and I got on a Johnny Cash kick. There was a CD in the car with dozens of Cash songs that stayed in the player for weeks on end. Our mom was pregnant at the time, and one night, when she was two weeks overdue for delivery, we got a phone call late at night telling us there was a complication and we needed to come to the hospital as quickly as we could. We had been expecting a call to rush to the hospital for the birth at any time; it’s funny how much those three words, “there’s a problem”, can change absolutely everything.&lt;/p&gt;
+
+&lt;p&gt;When we arrived, we were told the news: the baby, or Timothy, as we had planned to call him, was dead. I remember them bringing him in and me holding him, his little 10 pound body still pink with life except for his silent, blue lips. I was holding my little brother, but those three words had ruined everything. We cried, we mourned, we prayed, and hours later, we left.&lt;/p&gt;
+
+&lt;p&gt;My brother and I walked to the car through the cold midnight fog, guided by the orangish glow of the low pressure sodium lamps scattered around the sparsely populated lot. I remember wondering how many of those cars belonged to people like us, tending to the ones they love on a bitter, sleepless night, too afraid of leaving a bedside because they don’t know whether dawn will bring the beginning of a new day or the end of a lifetime.&lt;/p&gt;
+
+&lt;p&gt;As my brother turned the keys in the ignition, the CD player clicked to life and Guess Things Happen that Way started playing. If you have never heard it or just need reminding, it starts out like this:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;You ask me if I’ll forget my baby.&lt;br /&gt;
+I don’t know, I can’t say.&lt;br /&gt;
+I don’t like it, but I guess things happen that way.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;My brother and I didn’t say a word. We didn’t sing along, we just sat in silence and thought about those words which were stuck like a broken record playing over and over in our minds.&lt;/p&gt;
+
+&lt;p&gt;That was 7 years ago, now, and I still can’t hear that song without thinking back to that night, and thinking about how old he would’ve been now, and the things we would be doing together.&lt;/p&gt;
+
+&lt;p&gt;I don’t like it, but I guess things happen that way.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Because I'm an Optimist</title>
+   <link href="http://dpiers.github.com/optimist"/>
+   <updated>2013-03-14T00:00:00-07:00</updated>
+   <id>http:/dpiers.github.com/optimist</id>
+   <content type="html">&lt;p&gt;I am an optimist, which means I often promise amazing things and then get smacked down by reality. I have been the only engineer at my company for the last 3 months, and the truth is it has been killing me. I’m barely keeping it together, and every morning I wake up and want to tell my boss I quit. I’m on meds for migraines, blood pressure, and anxiety now.&lt;/p&gt;
+
+&lt;p&gt;But everything will be okay.&lt;/p&gt;
+
+&lt;p&gt;Why?&lt;/p&gt;
+
+&lt;p&gt;Because I’m an optimist.&lt;/p&gt;
+
+&lt;p&gt;Even when the world smacks me down, I get back up, because I am an optimist.&lt;/p&gt;
+
+&lt;p&gt;Even when I underestimate tasks and overestimate my abilities, when I fail to come through and let everyone down, even when everyone has lost their hope, trust, and respect for me, 
+I know everything will be ok, because I am an optimist.&lt;/p&gt;
+
+&lt;p&gt;And optimists don’t quit.&lt;/p&gt;
+
+&lt;p&gt;Edit: But sometimes they move on to &lt;a href=&quot;/better-things&quot;&gt;better things&lt;/a&gt;.&lt;/p&gt;
+</content>
+ </entry>
+ 
+</feed>
