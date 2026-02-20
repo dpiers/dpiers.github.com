@@ -1,105 +1,430 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Piers Family Pacific Odyssey – Summer 2026</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Piers Family · Pacific Odyssey – Summer 2026</title>
+
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'DM Sans', sans-serif; background: #0a0e1a; }
-  #map { width: 100vw; height: 100vh; background: #0f1628; }
-  #loading {
-    position: fixed; inset: 0; z-index: 9999;
-    display: flex; align-items: center; justify-content: center;
-    background: #0a0e1a; color: rgba(255,255,255,0.5);
-    font-family: 'DM Sans', sans-serif; font-size: 14px;
+  :root{
+    --bg:#0a0e1a;
+    --panel:#0c1020;
+    --panel2:#0b1224;
+    --stroke: rgba(255,255,255,0.10);
+    --text: rgba(255,255,255,0.92);
+    --muted: rgba(255,255,255,0.55);
+    --muted2: rgba(255,255,255,0.40);
+    --shadow: 0 10px 30px rgba(0,0,0,0.55);
+    --shadow2: 0 6px 18px rgba(0,0,0,0.50);
+    --radius: 14px;
   }
 
-  .leaflet-control-attribution { display: none !important; }
-  .leaflet-control-zoom { display: none !important; }
-
-  .stop-marker {
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.9);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.5);
-    font-size: 18px; line-height: 1;
-    transition: transform 0.2s ease;
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    font-family:'DM Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: radial-gradient(900px 600px at 15% 20%, rgba(78,205,196,0.10), transparent 60%),
+                radial-gradient(900px 600px at 85% 75%, rgba(224,86,160,0.12), transparent 65%),
+                var(--bg);
+    overflow:hidden;
   }
-  .stop-marker:hover { transform: scale(1.15); }
-  .stop-marker.major { width: 38px; height: 38px; }
-  .stop-marker.minor { width: 30px; height: 30px; font-size: 14px; }
+  #map{
+    width:100vw; height:100vh;
+    background: #0f1628;
+  }
+  #loading{
+    position:fixed; inset:0; z-index:9999;
+    display:flex; align-items:center; justify-content:center;
+    background: var(--bg);
+    color: rgba(255,255,255,0.55);
+    font-size:14px;
+    letter-spacing:0.2px;
+  }
 
-  .stop-label {
+  /* Leaflet chrome */
+  .leaflet-control-attribution{ display:none !important; }
+  .leaflet-control-zoom{ display:none !important; }
+
+  /* Marker dot */
+  .stop-marker{
+    display:flex; align-items:center; justify-content:center;
+    border-radius:50%;
+    border:2.5px solid rgba(255,255,255,0.92);
+    box-shadow: 0 2px 14px rgba(0,0,0,0.55);
+    transform: translateZ(0);
+    transition: transform 160ms ease, box-shadow 160ms ease;
+    font-size: 18px;
+    line-height: 1;
+    position: relative;
+  }
+  .stop-marker .num{
+    position:absolute;
+    bottom:-9px; right:-9px;
+    width:20px; height:20px;
+    border-radius:999px;
+    background: rgba(10,14,26,0.92);
+    border:1px solid rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.75);
+    font-size:10px;
+    font-weight:800;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.45);
+  }
+  .stop-marker:hover{ transform: scale(1.10); box-shadow: 0 4px 18px rgba(0,0,0,0.65); }
+  .stop-marker.major{ width:40px; height:40px; }
+  .stop-marker.minor{ width:32px; height:32px; font-size:15px; }
+
+  .stop-marker.active{
+    outline: 4px solid rgba(255,255,255,0.12);
+    box-shadow: 0 0 0 10px rgba(255,255,255,0.06), 0 10px 28px rgba(0,0,0,0.70);
+    transform: scale(1.12);
+  }
+
+  /* Tooltip labels (permanent for major) */
+  .stop-label{
     background: rgba(12, 14, 28, 0.92);
-    backdrop-filter: blur(8px);
-    border-radius: 10px;
-    padding: 8px 12px;
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 9px 12px;
     border: 1px solid rgba(255,255,255,0.12);
-    min-width: 150px;
+    min-width: 170px;
+    box-shadow: var(--shadow2);
     pointer-events: none;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   }
-  .stop-label .label-tag {
-    font-size: 8px; letter-spacing: 2px; font-weight: 700;
-    text-transform: uppercase; margin-bottom: 2px;
+  .stop-label .label-tag{
+    font-size: 8px;
+    letter-spacing: 2px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 3px;
   }
-  .stop-label .label-name {
-    font-size: 14px; font-weight: 800; color: #fff;
+  .stop-label .label-name{
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
     font-family: 'Playfair Display', serif;
+    letter-spacing: 0.2px;
   }
-  .stop-label .label-date {
-    font-size: 10px; color: rgba(255,255,255,0.55); font-weight: 600;
-    margin-top: 1px;
+  .stop-label .label-date{
+    font-size: 10px;
+    color: rgba(255,255,255,0.58);
+    font-weight: 700;
+    margin-top: 2px;
   }
-  .stop-label .label-detail {
-    font-size: 9.5px; color: rgba(255,255,255,0.4); margin-top: 3px;
-    line-height: 1.4;
+  .stop-label .label-detail{
+    font-size: 9.5px;
+    color: rgba(255,255,255,0.42);
+    margin-top: 5px;
+    line-height: 1.35;
+  }
+  /* Make Leaflet tooltip container transparent */
+  .leaflet-tooltip.stop-tooltip{
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
   }
 
-  #title-overlay {
-    position: fixed; top: 20px; left: 20px; z-index: 1000;
+  /* Title overlay */
+  #title-overlay{
+    position: fixed;
+    top: 20px; left: 20px;
+    z-index: 1200;
     pointer-events: none;
   }
-  #title-overlay .subtitle {
-    font-size: 10px; letter-spacing: 3px; color: rgba(255,255,255,0.35);
-    font-weight: 700; margin-bottom: 4px;
+  #title-overlay .subtitle{
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: rgba(255,255,255,0.38);
+    font-weight: 800;
+    margin-bottom: 6px;
   }
-  #title-overlay .title {
-    font-size: 30px; font-weight: 800; color: #fff;
-    font-family: 'Playfair Display', serif; line-height: 1.1;
-    text-shadow: 0 2px 16px rgba(0,0,0,0.6);
+  #title-overlay .title{
+    font-size: 30px;
+    font-weight: 900;
+    color: #fff;
+    font-family: 'Playfair Display', serif;
+    line-height: 1.06;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.65);
   }
-  #title-overlay .meta {
-    font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 5px; font-weight: 500;
+  #title-overlay .meta{
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    margin-top: 7px;
+    font-weight: 600;
   }
 
-  #legend {
-    position: fixed; bottom: 20px; left: 20px; z-index: 1000;
-    display: flex; gap: 16px; flex-wrap: wrap;
-    background: rgba(10,14,26,0.85); backdrop-filter: blur(10px);
-    border-radius: 12px; padding: 10px 16px;
+  /* Stats badges */
+  #stats{
+    position: fixed;
+    top: 20px; right: 20px;
+    z-index: 1200;
+    display: flex;
+    gap: 8px;
+    pointer-events: none;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 360px;
+  }
+  .stat-badge{
+    background: rgba(10,14,26,0.86);
+    backdrop-filter: blur(12px);
+    border-radius: 12px;
+    padding: 8px 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: var(--shadow2);
+  }
+  .stat-badge .sl{
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.38);
+    font-weight: 800;
+  }
+  .stat-badge .sv{
+    font-size: 14px;
+    font-weight: 800;
+    margin-top: 2px;
+  }
+
+  /* Legend */
+  #legend{
+    position: fixed;
+    bottom: 20px; left: 20px;
+    z-index: 1200;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    background: rgba(10,14,26,0.80);
+    backdrop-filter: blur(12px);
+    border-radius: 14px;
+    padding: 10px 14px;
     border: 1px solid rgba(255,255,255,0.08);
     pointer-events: none;
+    box-shadow: var(--shadow2);
   }
-  .li { display: flex; align-items: center; gap: 6px; }
-  .ll { width: 20px; height: 0; }
-  .lt { font-size: 10px; color: rgba(255,255,255,0.45); font-weight: 600; letter-spacing: 0.4px; }
+  .li{ display:flex; align-items:center; gap:8px; }
+  .ll{ width:22px; height:0; }
+  .lt{
+    font-size: 10px;
+    color: rgba(255,255,255,0.50);
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
 
-  #stats {
-    position: fixed; top: 20px; right: 20px; z-index: 1000;
-    display: flex; gap: 8px; pointer-events: none;
+  /* Info panel */
+  #panel{
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1300;
+    width: min(380px, calc(100vw - 40px));
+    max-height: none;
+    background: rgba(10,14,26,0.88);
+    backdrop-filter: blur(14px);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
-  .stat-badge {
-    background: rgba(10,14,26,0.85); backdrop-filter: blur(10px);
-    border-radius: 10px; padding: 7px 14px; text-align: center;
+  #panel .p-head{
+    padding: 12px 14px 10px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display:flex; align-items:flex-start; justify-content:space-between;
+    gap: 10px;
+  }
+  #panel .p-titlewrap{ min-width: 0; }
+  #panel .p-tag{
+    font-size: 8px;
+    letter-spacing: 2px;
+    font-weight: 900;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    opacity: 0.95;
+  }
+  #panel .p-name{
+    font-family:'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.15;
+    word-wrap: break-word;
+  }
+  #panel .p-date{
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    font-weight: 700;
+    margin-top: 4px;
+  }
+  #panel .p-body{
+    padding: 12px 14px 14px 14px;
+    color: rgba(255,255,255,0.72);
+    font-size: 12px;
+    line-height: 1.5;
+    flex: 1 1 auto;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  #panel .p-body .kv{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.10);
+  }
+  #panel .p-body .kv:last-child{ border-bottom: none; }
+  #panel .p-body .k{ color: rgba(255,255,255,0.48); font-weight: 700; font-size: 11px; }
+  #panel .p-body .v{ color: rgba(255,255,255,0.86); font-weight: 700; text-align:right; }
+
+  #panel .p-actions{
+    padding: 10px 14px 14px 14px;
+    display:flex; gap: 8px; flex-wrap: wrap;
+    flex: 0 0 auto;
+  }
+  .btn{
+    pointer-events: auto;
+    cursor:pointer;
+    user-select:none;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.78);
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 0.2px;
+    padding: 8px 10px;
+    transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+  }
+  .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.16); }
+  .btn:active{ transform: translateY(0px); }
+
+
+  /* Panel header tools */
+  #panel .p-tools{
+    display:flex;
+    gap: 6px;
+    pointer-events: auto;
+  }
+  .iconbtn{
+    pointer-events: auto;
+    cursor: pointer;
+    user-select: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.78);
+    font-weight: 900;
+    font-size: 14px;
+    line-height: 1;
+    transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+  }
+  .iconbtn:hover{
+    transform: translateY(-1px);
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(255,255,255,0.16);
+  }
+  .iconbtn:active{ transform: translateY(0px); }
+
+  /* Collapsible / hideable panel states */
+  #panel.collapsed .p-body,
+  #panel.collapsed .p-actions{ display:none; }
+  #panel.collapsed .p-head{
+    border-bottom: none;
+    padding-bottom: 14px;
+  }
+  #panel.collapsed .p-name{ font-size: 16px; }
+  #panel.collapsed .p-date{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  body.panel-hidden #panel{ display:none; }
+
+  /* Floating "Details" button (shown when panel hidden) */
+  #panelFab{
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1300;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 999px;
+    background: rgba(10,14,26,0.86);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: var(--shadow2);
+    color: rgba(255,255,255,0.86);
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    user-select: none;
+    pointer-events: auto;
+    transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+  }
+  #panelFab .fi{ font-size: 14px; }
+  body.panel-hidden #panelFab{ display:flex; }
+  #panelFab:hover{
+    background: rgba(10,14,26,0.92);
+    border-color: rgba(255,255,255,0.16);
+    transform: translateY(-1px);
+  }
+  #panelFab:active{ transform: translateY(0px); }
+
+  /* Tiny attribution */
+  #attrib{
+    position: fixed;
+    left: 20px;
+    bottom: 88px;
+    z-index: 1200;
+    padding: 6px 10px;
+    border-radius: 12px;
+    background: rgba(10,14,26,0.70);
     border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.35);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    pointer-events: none;
   }
-  .stat-badge .sl {
-    font-size: 8px; letter-spacing: 1.5px; color: rgba(255,255,255,0.35); font-weight: 700;
-  }
-  .stat-badge .sv {
-    font-size: 14px; font-weight: 700; margin-top: 1px;
+
+  /* Responsive tweaks */
+  @media (max-width: 720px){
+    #stats{ max-width: 240px; }
+    #title-overlay .title{ font-size: 26px; }
+
+    /* Panel behaves like a compact drawer on mobile */
+    #panel{
+      right: 12px;
+      bottom: calc(12px + env(safe-area-inset-bottom));
+      width: min(360px, calc(100vw - 24px));
+      max-height: 52vh;
+    }
+    #panel.collapsed{
+      width: min(280px, calc(100vw - 24px));
+    }
+    #panelFab{
+      right: 12px;
+      bottom: calc(12px + env(safe-area-inset-bottom));
+      padding: 10px;
+    }
+    #panelFab .ft{ display:none; }
+
+    #legend{ left: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); }
+    #title-overlay{ left: 12px; top: 12px; }
+    #stats{ right: 12px; top: 12px; }
+    #attrib{ left: 12px; bottom: calc(78px + env(safe-area-inset-bottom)); }
   }
 </style>
 </head>
@@ -115,10 +440,9 @@
 </div>
 
 <div id="stats">
-  <div class="stat-badge"><div class="sl">FLIGHTS</div><div class="sv" style="color:#4ecdc4">7 legs</div></div>
-  <div class="stat-badge"><div class="sl">TRAINS</div><div class="sv" style="color:#f7d794">2 legs</div></div>
-  <div class="stat-badge"><div class="sl">CRUISE</div><div class="sv" style="color:#e056a0">7 nights</div></div>
-  <div class="stat-badge"><div class="sl">DISNEY</div><div class="sv" style="color:#f8b500">4 parks</div></div>
+  <div class="stat-badge"><div class="sl">FLIGHTS</div><div class="sv" id="statFlights" style="color:#4ecdc4">—</div></div>
+  <div class="stat-badge"><div class="sl">TRAINS</div><div class="sv" id="statTrains" style="color:#f7d794">—</div></div>
+  <div class="stat-badge"><div class="sl">CRUISE</div><div class="sv" id="statCruise" style="color:#e056a0">—</div></div>
 </div>
 
 <div id="legend">
@@ -126,6 +450,37 @@
   <div class="li"><div class="ll" style="border-top:3px dashed #f7d794"></div><span class="lt">Bullet Train</span></div>
   <div class="li"><div class="ll" style="border-top:2.5px solid #e056a0"></div><span class="lt">Cruise</span></div>
   <div class="li"><div class="ll" style="border-top:2px dashed rgba(255,255,255,0.25)"></div><span class="lt">Drive</span></div>
+</div>
+
+<div id="attrib">Tiles: © OpenStreetMap contributors · © CARTO</div>
+
+<div id="panel">
+  <div class="p-head">
+    <div class="p-titlewrap">
+      <div class="p-tag" id="pTag" style="color: rgba(255,255,255,0.55)">TIP</div>
+      <div class="p-name" id="pName">Explore the trip</div>
+      <div class="p-date" id="pDate">Click a stop or travel leg</div>
+    </div>
+    <div class="p-tools">
+      <button type="button" class="iconbtn" id="btnCollapse" aria-label="Collapse details" title="Collapse">▾</button>
+      <button type="button" class="iconbtn" id="btnHide" aria-label="Hide panel" title="Hide">✕</button>
+    </div>
+  </div>
+  <div class="p-body id="pBody">
+    <div class="kv"><div class="k">Labels</div><div class="v">auto-hide when overlapping</div></div>
+    <div class="kv"><div class="k">Stops</div><div class="v">major + ports</div></div>
+    <div class="kv"><div class="k">Travel legs</div><div class="v">layovers consolidated</div></div>
+  </div>
+  <div class="p-actions">
+    <div class="btn" id="btnReset">Reset view</div>
+    <div class="btn" id="btnShowAll">Show all labels</div>
+    <div class="btn" id="btnAuto">Auto label</div>
+  </div>
+</div>
+
+<div id="panelFab" role="button" aria-label="Show details" title="Show details">
+  <span class="fi">ⓘ</span>
+  <span class="ft">Details</span>
 </div>
 
 <script>
@@ -158,7 +513,7 @@ function loadJS(url) {
 
 function buildMap() {
 
-  // Center: Asia/AUS on left, Americas on right
+  // Center: Pacific (Asia/AUS on left, Americas on right)
   var map = L.map('map', {
     center: [8, -170],
     zoom: 3,
@@ -166,161 +521,539 @@ function buildMap() {
     maxZoom: 8,
     zoomControl: false,
     attributionControl: false,
+    worldCopyJump: false
   });
 
-  // Dark tiles — CartoDB dark_all (no key needed)
+  // Dark tiles — CartoDB dark_all (no key)
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     subdomains: 'abcd',
-    maxZoom: 19,
+    maxZoom: 19
   }).addTo(map);
 
-  // ── Stops ──
-  var stops = [
-    { id:"sea", name:"Seattle", lat:47.45, lng:-122.31, icon:"\u2708\uFE0F", color:"#4ecdc4", size:"major", tag:"HOME", tagColor:"#4ecdc4", date:"Jun 23 departure \xb7 Jul 28 return", detail:"AS 628 out \xb7 AS 900 First Class home", labelDir:"left" },
-    { id:"bne", name:"Brisbane", lat:-27.38, lng:153.12, icon:"\uD83E\uDD98", color:"#f8b500", size:"major", tag:"AUSTRALIA", tagColor:"#f8b500", date:"Jun 25 \u2013 Jul 14 \xb7 19 days", detail:"Europcar Ford Everest \xb7 Carnival Encounter cruise", labelDir:"right" },
-    { id:"springbrook", name:"Springbrook", lat:-28.21, lng:153.27, icon:"\uD83C\uDF3F", color:"#00b894", size:"minor", tag:"RAINFOREST", tagColor:"#00b894", date:"Jun 30 \u2013 Jul 2 \xb7 2 nights", detail:"The Mouses House Retreat", labelDir:"right" },
-    { id:"zoo", name:"Australia Zoo", lat:-26.84, lng:152.96, icon:"\uD83D\uDC0A", color:"#00b894", size:"minor", tag:"ACTIVITY", tagColor:"#00b894", date:"Jul 2 \xb7 Day trip", detail:"Beerwah, Sunshine Coast", labelDir:"right" },
-    { id:"willis", name:"Willis Islets", lat:-16.3, lng:150.0, icon:"\uD83D\uDEA2", color:"#e056a0", size:"minor", tag:"CRUISE PORT", tagColor:"#e056a0", date:"Jul 6", detail:"Coral Sea", labelDir:"right" },
-    { id:"cairns", name:"Cairns", lat:-16.92, lng:145.77, icon:"\uD83E\uDD3F", color:"#e056a0", size:"minor", tag:"CRUISE PORT", tagColor:"#e056a0", date:"Jul 7 \xb7 GBR Scuba", detail:"Great Barrier Reef dive 12\u20133 PM", labelDir:"left" },
-    { id:"airlie", name:"Airlie Beach", lat:-20.27, lng:148.72, icon:"\uD83C\uDFDD\uFE0F", color:"#e056a0", size:"minor", tag:"CRUISE PORT", tagColor:"#e056a0", date:"Jul 9 \xb7 Whitsundays", detail:"Carnival Encounter", labelDir:"left" },
-    { id:"hkg", name:"Hong Kong", lat:22.32, lng:114.17, icon:"\uD83C\uDFF0", color:"#e056a0", size:"major", tag:"DISNEY", tagColor:"#e056a0", date:"Jul 15 \xb7 1 day", detail:"HK Disneyland \xb7 Disney Explorers Lodge", labelDir:"bottom" },
-    { id:"sha", name:"Shanghai", lat:31.23, lng:121.47, icon:"\uD83C\uDF86", color:"#e056a0", size:"major", tag:"DISNEY", tagColor:"#e056a0", date:"Jul 15\u201317 \xb7 2 nights", detail:"Shanghai Disneyland Hotel \xb7 LinaBell Overlay \xb7 \xa58,411", labelDir:"top" },
-    { id:"kix", name:"Osaka", lat:34.43, lng:135.23, icon:"\uD83D\uDE84", color:"#f7d794", size:"minor", tag:"TRANSIT", tagColor:"#f7d794", date:"Jul 17\u201318", detail:"PVG\u2192KIX flight \xb7 Shinkansen to Tokyo", labelDir:"left" },
-    { id:"tyo", name:"Tokyo Disney", lat:35.63, lng:139.88, icon:"\uD83D\uDDFC", color:"#e17055", size:"major", tag:"DISNEY", tagColor:"#e17055", date:"Jul 19\u201321 \xb7 3 nights", detail:"Fantasy Springs Hotel \xb7 DisneySea & Disneyland \xb7 \xa5843,200 pkg", labelDir:"top" },
-    { id:"hnl", name:"Honolulu", lat:21.31, lng:-157.86, icon:"\uD83C\uDF3A", color:"#00cec9", size:"major", tag:"AULANI", tagColor:"#00cec9", date:"Jul 21\u201327 \xb7 6 nights", detail:"DVC 1BR Ocean View Villa \xb7 372 pts \xb7 Avis rental", labelDir:"bottom" },
+  // ── Data ────────────────────────────────────────────────────────────────
+  // NOTE: Major stops are labeled permanently; minor stops get hover tooltips.
+  // Dates reflect TripIt + user updates (Mouses House: Jun 30 check-in, Jul 2 check-out).
+    // Longitude shift helper to keep the Pacific route continuous.
+  // Leaflet can draw trans-Pacific lines the "long way" when segments cross the antimeridian.
+  // By shifting Eastern Hemisphere longitudes by -360, everything lives in one continuous longitude range.
+  function sLng(lng){
+    return (lng > 0 ? lng - 360 : lng);
+  }
+
+var stops = [
+    { n:1, id:"sea", name:"Seattle", lat:47.45, lng:-122.31, icon:"✈️", color:"#4ecdc4", size:"major",
+      tag:"HOME", tagColor:"#4ecdc4",
+      date:"Jun 23 departure · Jul 28 return",
+      detail:"Seattle–Brisbane flights out · Honolulu–Seattle return",
+      labelDir:"left", priority: 100 },
+
+    { n:2, id:"bne", name:"Brisbane", lat:-27.38, lng:sLng(153.12), icon:"🦘", color:"#f8b500", size:"major",
+      tag:"AUSTRALIA", tagColor:"#f8b500",
+      date:"Jun 25 – Jul 14 · ~19 days",
+      detail:"Car rental · Base for Gold Coast + Carnival Encounter cruise",
+      labelDir:"right", priority: 95 },
+
+    { n:3, id:"springbrook", name:"Springbrook", lat:-28.21, lng:sLng(153.27), icon:"🌿", color:"#00b894", size:"minor",
+      tag:"RAINFOREST", tagColor:"#00b894",
+      date:"Jun 30 – Jul 2 · 2 nights",
+      detail:"The Mouses House Retreat (updated dates)",
+      labelDir:"right", priority: 50 },
+
+    { n:4, id:"zoo", name:"Australia Zoo", lat:-26.84, lng:sLng(152.96), icon:"🐊", color:"#00b894", size:"minor",
+      tag:"DAY TRIP", tagColor:"#00b894",
+      date:"Jul 2 · Day trip",
+      detail:"Beerwah, Sunshine Coast (10:00–18:00)",
+      labelDir:"right", priority: 45 },
+
+    { n:5, id:"willis", name:"Willis Islets", lat:-16.30, lng:sLng(150.00), icon:"🛳️", color:"#e056a0", size:"minor",
+      tag:"CRUISE PORT", tagColor:"#e056a0",
+      date:"Jul 6",
+      detail:"Carnival Encounter (Coral Sea)",
+      labelDir:"right", priority: 40 },
+
+    { n:6, id:"cairns", name:"Cairns", lat:-16.92, lng:sLng(145.77), icon:"🤿", color:"#e056a0", size:"minor",
+      tag:"CRUISE PORT", tagColor:"#e056a0",
+      date:"Jul 7",
+      detail:"Great Barrier Reef scuba (12:00–15:00)",
+      labelDir:"left", priority: 40 },
+
+    { n:7, id:"airlie", name:"Airlie Beach", lat:-20.27, lng:sLng(148.72), icon:"🏝️", color:"#e056a0", size:"minor",
+      tag:"CRUISE PORT", tagColor:"#e056a0",
+      date:"Jul 9",
+      detail:"Whitsundays stop (depart 18:30)",
+      labelDir:"left", priority: 40 },
+
+{ n:8, id:"gco", name:"Gold Coast (Paradise Resort)", lat:-28.00, lng:sLng(153.43), icon:"🏨", color:"#f8b500", size:"minor",
+  tag:"HOTEL", tagColor:"#f8b500",
+  date:"Jul 11 – Jul 13 · 2 nights",
+  detail:"Paradise Resort Gold Coast",
+  labelDir:"right", priority: 44 },
+
+
+    { n:9, id:"hkg", name:"Hong Kong", lat:22.32, lng:sLng(114.17), icon:"🏰", color:"#e056a0", size:"major",
+      tag:"DISNEY", tagColor:"#e056a0",
+      date:"Jul 15 · 1 day",
+      detail:"Hong Kong Disneyland + Explorers Lodge",
+      labelDir:"bottom", priority: 90 },
+
+    { n:10, id:"sha", name:"Shanghai", lat:31.23, lng:sLng(121.47), icon:"🎆", color:"#e056a0", size:"major",
+      tag:"DISNEY", tagColor:"#e056a0",
+      date:"Jul 15 – Jul 17 · 2 nights",
+      detail:"Shanghai Disneyland Hotel",
+      labelDir:"top", priority: 88 },
+
+    { n:11, id:"osa", name:"Osaka", lat:34.69, lng:sLng(135.50), icon:"🚄", color:"#f7d794", size:"minor",
+      tag:"TRANSIT", tagColor:"#f7d794",
+      date:"Jul 17 – Jul 18",
+      detail:"Arrive from Shanghai · Shinkansen to Tokyo (added leg)",
+      labelDir:"left", priority: 55 },
+
+    { n:12, id:"tyo", name:"Tokyo Disney", lat:35.63, lng:sLng(139.88), icon:"🗼", color:"#e17055", size:"major",
+      tag:"DISNEY", tagColor:"#e17055",
+      date:"Jul 19 – Jul 21 · 3 park days",
+      detail:"Fantasy Springs Hotel · DisneySea & Disneyland",
+      labelDir:"top", priority: 85 },
+
+    { n:13, id:"hnl", name:"O‘ahu (Aulani)", lat:21.34, lng:-158.12, ic    { id:"f1", type:"flight", color:"#4ecdc4", dash:"8 6", weight:2.8,
+      from:"sea", to:"bne",
+      title:"Flight · Seattle → Brisbane",
+      when:"Jun 23–25",
+      duration:"Air time 18h 45m (SEA→SFO→SYD→BNE)",
+      detail:"Layovers consolidated on map (SFO + SYD)" },
+
+    { id:"d1", type:"drive", color:"rgba(255,255,255,0.25)", dash:"4 7", weight:1.6,
+      from:"bne", to:"springbrook",
+      title:"Drive · Brisbane → Springbrook",
+      when:"Jun 30",
+      duration:"—",
+      detail:"Gold Coast Hinterland" },
+
+    { id:"d2", type:"drive", color:"rgba(255,255,255,0.25)", dash:"4 7", weight:1.6,
+      from:"springbrook", to:"zoo",
+      title:"Drive · Springbrook → Australia Zoo",
+      when:"Jul 2",
+      duration:"—",
+      detail:"Day trip" },
+
+    { id:"d3", type:"drive", color:"rgba(255,255,255,0.25)", dash:"4 7", weight:1.6,
+      from:"zoo", to:"bne",
+      title:"Drive · Australia Zoo → Brisbane",
+      when:"Jul 2",
+      duration:"—",
+      detail:"Return to Brisbane" },
+
+    { id:"cruise", type:"cruise", color:"#e056a0", dash:null, weight:2.8,
+      route:["bne","willis","cairns","airlie","bne"],
+      title:"Cruise · Carnival Encounter",
+      when:"Jul 4–11",
+      duration:"7 nights",
+      detail:"Brisbane roundtrip with port stops" },
+
+{ id:"d4", type:"drive", color:"rgba(255,255,255,0.25)", dash:"4 7", weight:1.6,
+  from:"bne", to:"gco",
+  title:"Drive · Brisbane → Gold Coast",
+  when:"Jul 11",
+  duration:"≈1h",
+  detail:"Paradise Resort (Surfers Paradise)" },
+
+{ id:"d5", type:"drive", color:"rgba(255,255,255,0.25)", dash:"4 7", weight:1.6,
+  from:"gco", to:"bne",
+  title:"Drive · Gold Coast → Brisbane",
+  when:"Jul 13",
+  duration:"≈1h",
+  detail:"Return toward Brisbane / airport" },
+
+
+
+    { id:"f2", type:"flight", color:"#4ecdc4", dash:"8 6", weight:2.8,
+      from:"bne", to:"hkg",
+      title:"Flight · Brisbane → Hong Kong",
+      when:"Jul 14–15 (overnight)",
+      duration:"~8h 45m",
+      detail:"Nonstop" },
+
+    { id:"t1", type:"train", color:"#f7d794", dash:"6 8", weight:3.2,
+      from:"hkg", to:"sha",
+      title:"Bullet train · Hong Kong → Shanghai",
+      when:"Jul 15",
+      duration:"≈8h",
+      detail:"Hong Kong West Kowloon → Shanghai Hongqiao (typical runtime)" },
+
+    { id:"f3", type:"flight", color:"#4ecdc4", dash:"8 6", weight:2.8,
+      from:"sha", to:"osa",
+      title:"Flight · Shanghai → Osaka",
+      when:"Jul 17",
+      duration:"2h 20m",
+      detail:"PVG → KIX" },
+
+    { id:"t2", type:"train", color:"#f7d794", dash:"6 8", weight:3.2,
+      from:"osa", to:"tyo",
+      title:"Bullet train · Osaka → Tokyo",
+      when:"Jul 18",
+      duration:"≈2h 21m–2h 39m",
+      detail:"Shinkansen (Nozomi/Hikari typical runtimes)" },
+
+    { id:"f4", type:"flight", color:"#4ecdc4", dash:"8 6", weight:2.8,
+      from:"tyo", to:"hnl",
+      title:"Flight · Tokyo (HND) → Honolulu",
+      when:"Jul 21",
+      duration:"7h 55m",
+      detail:"Nonstop" },
+
+    { id:"f5", type:"flight", color:"#4ecdc4", dash:"8 6", weight:2.8,
+      from:"hnl", to:"sea",
+      title:"Flight · Honolulu → Seattle",
+      when:"Jul 27–28 (overnight)",
+      duration:"5h 40m",
+      detail:"Nonstop" }, duration:"7h 55m",
+      detail:"Nonstop" },
+
+    { id:"f5", type:"flight", color:"#4ecdc4", dash:"8 6", weight:2.8,
+      from:"hnl", to:"sea",
+      title:"Flight · Honolulu → Seattle",
+      when:"Jul 27–28 (overnight)",
+      duration:"5h 40m",
+      detail:"Nonstop" },
   ];
 
-  // ── Place markers + labels ──
-  stops.forEach(function(s) {
-    var sizeClass = s.size === 'major' ? 'major' : 'minor';
-    var px = s.size === 'major' ? 38 : 30;
+  
+  // ── Panel UX (mobile friendly) ──────────────────────────────────────────
+  var panelEl = document.getElementById('panel');
+  var fabEl = document.getElementById('panelFab');
+  var btnCollapse = document.getElementById('btnCollapse');
+  var btnHide = document.getElementById('btnHide');
 
-    var markerIcon = L.divIcon({
-      className: '',
-      html: '<div class="stop-marker ' + sizeClass + '" style="background:' + s.color + '; width:' + px + 'px; height:' + px + 'px;">' + s.icon + '</div>',
-      iconSize: [px, px],
-      iconAnchor: [px/2, px/2],
+  function isMobile(){
+    return window.matchMedia('(max-width: 720px)').matches;
+  }
+
+  function setCollapsed(collapsed){
+    if (!panelEl) return;
+    panelEl.classList.toggle('collapsed', collapsed);
+    if (btnCollapse){
+      btnCollapse.textContent = collapsed ? '▴' : '▾';
+      btnCollapse.setAttribute('aria-label', collapsed ? 'Expand details' : 'Collapse details');
+      btnCollapse.title = collapsed ? 'Expand' : 'Collapse';
+    }
+  }
+
+  function hidePanel(){
+    document.body.classList.add('panel-hidden');
+  }
+  function showPanel(){
+    document.body.classList.remove('panel-hidden');
+  }
+  function ensurePanelVisible(){
+    var wasHidden = document.body.classList.contains('panel-hidden');
+    if (wasHidden) showPanel();
+    // If the panel was hidden, reopen in compact mode on mobile so it doesn't cover the map.
+    if (wasHidden && isMobile()) setCollapsed(true);
+  }
+
+  if (btnCollapse){
+    btnCollapse.addEventListener('click', function(e){
+      e.stopPropagation();
+      setCollapsed(!panelEl.classList.contains('collapsed'));
     });
-
-    L.marker([s.lat, s.lng], {
-      icon: markerIcon,
-      zIndexOffset: s.size === 'major' ? 1000 : 500
-    }).addTo(map);
-
-    var labelOffsets = {
-      top:    [0, -60],
-      bottom: [0, 30],
-      left:   [-170, -20],
-      right:  [30, -20],
-    };
-    var off = labelOffsets[s.labelDir] || labelOffsets.top;
-
-    var labelIcon = L.divIcon({
-      className: '',
-      html: '<div class="stop-label">' +
-        '<div class="label-tag" style="color:' + s.tagColor + '">' + s.tag + '</div>' +
-        '<div class="label-name">' + s.name + '</div>' +
-        '<div class="label-date">' + s.date + '</div>' +
-        '<div class="label-detail">' + s.detail + '</div>' +
-        '</div>',
-      iconSize: [160, 70],
-      iconAnchor: [-off[0], -off[1]],
+  }
+  if (btnHide){
+    btnHide.addEventListener('click', function(e){
+      e.stopPropagation();
+      hidePanel();
     });
+  }
+  if (fabEl){
+    fabEl.addEventListener('click', function(){
+      showPanel();
+      setCollapsed(isMobile());
+    });
+  }
 
-    L.marker([s.lat, s.lng], {
-      icon: labelIcon,
-      zIndexOffset: 100,
-      interactive: false
-    }).addTo(map);
-  });
+  // Default: compact panel on mobile
+  setCollapsed(isMobile());
 
-  // ── Curved flight arcs ──
+// ── Helpers ─────────────────────────────────────────────────────────────
+  function getStop(id){
+    return stops.find(function(s){ return s.id === id; });
+  }
+
+  function labelHTML(s){
+    return '<div class="stop-label">' +
+      '<div class="label-tag" style="color:'+ s.tagColor +'">' + s.tag + '</div>' +
+      '<div class="label-name">' + s.name + '</div>' +
+      '<div class="label-date">' + s.date + '</div>' +
+      '<div class="label-detail">' + s.detail + '</div>' +
+    '</div>';
+  }
+
+  function setPanel(tagText, tagColor, name, date, rows){
+    document.getElementById('pTag').textContent = tagText || '';
+    document.getElementById('pTag').style.color = tagColor || 'rgba(255,255,255,0.55)';
+    document.getElementById('pName').textContent = name || '';
+    document.getElementById('pDate').textContent = date || '';
+    var body = document.getElementById('pBody');
+    body.innerHTML = '';
+    (rows || []).forEach(function(r){
+      var div = document.createElement('div');
+      div.className = 'kv';
+      div.innerHTML = '<div class="k">'+ r.k +'</div><div class="v">'+ r.v +'</div>';
+      body.appendChild(div);
+    });
+  }
+
+  // Flight arc that behaves well across the dateline (simple curved polyline)
   function flightArc(from, to, numPoints) {
-    numPoints = numPoints || 80;
+    numPoints = numPoints || 90;
     var pts = [];
     var lngFrom = from[1], lngTo = to[1];
     var diff = lngTo - lngFrom;
     if (diff > 180) lngTo -= 360;
     else if (diff < -180) lngTo += 360;
+
     for (var i = 0; i <= numPoints; i++) {
       var t = i / numPoints;
       var lat = from[0] + (to[0] - from[0]) * t;
       var lng = lngFrom + (lngTo - lngFrom) * t;
-      var arc = Math.sin(t * Math.PI) * (Math.abs(to[0] - from[0]) * 0.12 + 2);
+      var arc = Math.sin(t * Math.PI) * (Math.abs(to[0] - from[0]) * 0.10 + 2.2);
       pts.push([lat + arc, lng]);
     }
     return pts;
   }
 
-  // Flights (teal dashed)
-  var flights = [
-    { from: [47.45, -122.31], to: [-27.38, 153.12] },   // SEA→BNE consolidated
-    { from: [-27.38, 153.12], to: [22.32, 114.17] },     // BNE→HKG
-    { from: [31.23, 121.47],  to: [34.43, 135.23] },     // PVG→KIX
-    { from: [35.63, 139.88],  to: [21.31, -157.86] },    // HND→HNL
-    { from: [21.31, -157.86], to: [47.45, -122.31] },    // HNL→SEA
-  ];
+  // ── Markers + (smart) labels ────────────────────────────────────────────
+  var stopLayers = {};
+  var labelRecords = [];  // {priority, tooltip}
 
-  flights.forEach(function(f) {
-    var arc = flightArc(f.from, f.to);
-    L.polyline(arc, {
-      color: '#4ecdc4',
-      weight: 2.5,
-      opacity: 0.7,
-      dashArray: '8 5',
-      smoothFactor: 1,
+  stops.forEach(function(s) {
+    var isMajor = (s.size === 'major');
+    var px = isMajor ? 40 : 32;
+
+    var markerIcon = L.divIcon({
+      className: '',
+      html: '<div class="stop-marker '+ (isMajor ? 'major':'minor') +'" style="background:'+ s.color +'; width:'+ px +'px; height:'+ px +'px;">' +
+              '<span aria-hidden="true">'+ s.icon +'</span>' +
+              '<div class="num">'+ s.n +'</div>' +
+            '</div>',
+      iconSize: [px, px],
+      iconAnchor: [px/2, px/2],
+    });
+
+    var marker = L.marker([s.lat, s.lng], {
+      icon: markerIcon,
+      zIndexOffset: isMajor ? 1000 : 600,
+      riseOnHover: true
     }).addTo(map);
+
+    stopLayers[s.id] = marker;
+
+    // Click -> panel + highlight
+    marker.on('click', function(){
+      ensurePanelVisible();
+      setActiveStop(s.id);
+      map.flyTo([s.lat, s.lng], Math.max(map.getZoom(), (isMajor ? 4 : 5)), { duration: 0.8 });
+    });
+
+    // Tooltip label strategy:
+    // - major: permanent tooltip (with collision auto-hide)
+    // - minor: hover tooltip (simple)
+    if (isMajor){
+      var dir = s.labelDir || 'top';
+      var offsets = { top:[0,-14], bottom:[0,14], left:[-14,0], right:[14,0] };
+      marker.bindTooltip(labelHTML(s), {
+        permanent: true,
+        direction: dir,
+        offset: offsets[dir] || [0,-14],
+        opacity: 1,
+        interactive: false,
+        className: 'stop-tooltip'
+      }).openTooltip();
+
+      labelRecords.push({ id:s.id, priority: s.priority || 1, marker: marker });
+    } else {
+      marker.bindTooltip('<div class="stop-label"><div class="label-tag" style="color:'+ s.tagColor +'">'+ s.tag +'</div><div class="label-name">'+ s.name +'</div><div class="label-date">'+ s.date +'</div><div class="label-detail">'+ s.detail +'</div></div>', {
+        permanent: false,
+        direction: 'top',
+        offset: [0, -12],
+        opacity: 1,
+        interactive: false,
+        className: 'stop-tooltip'
+      });
+    }
   });
 
-  // Bullet trains (gold dashed)
-  var trains = [
-    { from: [22.32, 114.17], to: [31.23, 121.47] },   // HKG→SHA
-    { from: [34.43, 135.23], to: [35.63, 139.88] },    // Osaka→Tokyo
-  ];
+  // Active state highlighting
+  var activeStopId = null;
+  function setActiveStop(id){
+    activeStopId = id;
+    // toggle class on marker html
+    Object.keys(stopLayers).forEach(function(k){
+      var el = stopLayers[k].getElement();
+      if (!el) return;
+      var mk = el.querySelector('.stop-marker');
+      if (!mk) return;
+      if (k === id) mk.classList.add('active');
+      else mk.classList.remove('active');
+    });
+    var s = getStop(id);
+    if (s){
+      setPanel(s.tag, s.tagColor, s.name, s.date, [
+        {k:'What', v: s.detail},
+        {k:'Stop #', v: String(s.n)},
+      ]);
+    }
+  }
 
-  trains.forEach(function(t) {
-    L.polyline([t.from, t.to], {
-      color: '#f7d794',
-      weight: 3,
-      opacity: 0.85,
-      dashArray: '6 8',
-    }).addTo(map);
+  // ── Label collision avoidance (major labels only) ───────────────────────
+  var labelMode = 'auto'; // 'auto' | 'all'
+  function applyLabelMode(){
+    var zoom = map.getZoom();
+    // At far zooms, hide all permanent labels (cleaner).
+    var showAtThisZoom = (zoom >= 3);
+
+    // Reset all labels to visible (or hidden if zoom too low)
+    labelRecords.forEach(function(rec){
+      var tt = rec.marker.getTooltip();
+      if (!tt) return;
+      var el = tt.getElement();
+      if (!el) return;
+      el.style.display = showAtThisZoom ? '' : 'none';
+    });
+
+    if (!showAtThisZoom) return;
+    if (labelMode === 'all') return;
+
+    // Collision pass: highest priority first
+    var visibleBoxes = [];
+    var sorted = labelRecords.slice().sort(function(a,b){ return (b.priority||0) - (a.priority||0); });
+
+    sorted.forEach(function(rec){
+      var tt = rec.marker.getTooltip();
+      if (!tt) return;
+      var el = tt.getElement();
+      if (!el) return;
+      el.style.display = ''; // attempt show
+      var box = el.getBoundingClientRect();
+
+      // Slight padding to reduce "near overlap"
+      var pad = 6;
+      var padded = { left: box.left - pad, right: box.right + pad, top: box.top - pad, bottom: box.bottom + pad };
+
+      var overlaps = visibleBoxes.some(function(b){
+        return !(padded.right < b.left || padded.left > b.right || padded.bottom < b.top || padded.top > b.bottom);
+      });
+
+      if (overlaps){
+        el.style.display = 'none';
+      } else {
+        visibleBoxes.push(padded);
+      }
+    });
+  }
+
+  // Apply after map render / move / zoom
+  function scheduleLabelPass(){
+    setTimeout(applyLabelMode, 70);
+  }
+  map.on('zoomend moveend', scheduleLabelPass);
+  scheduleLabelPass();
+
+  // ── Draw travel legs ────────────────────────────────────────────────────
+  var legLayers = [];
+  function legTooltipHTML(leg){
+    return '<div class="stop-label" style="min-width:200px">' +
+      '<div class="label-tag" style="color:'+ leg.color +'">'+ (leg.type || 'TRAVEL').toUpperCase() +'</div>' +
+      '<div class="label-name">'+ leg.title +'</div>' +
+      '<div class="label-date">'+ leg.when +'</div>' +
+      '<div class="label-detail">'+ (leg.duration ? ('Duration: ' + leg.duration + '<br/>') : '') + (leg.detail || '') +'</div>' +
+    '</div>';
+  }
+
+  function addLegLayer(layer, leg){
+    layer.addTo(map);
+    layer.on('click', function(){
+      ensurePanelVisible();
+      setPanel((leg.type || 'TRAVEL').toUpperCase(), leg.color, leg.title, leg.when, [
+        {k:'Duration', v: leg.duration || '—'},
+        {k:'Notes', v: leg.detail || '—'},
+      ]);
+    });
+    layer.bindTooltip(legTooltipHTML(leg), { sticky:true, opacity:1, className:'stop-tooltip', direction:'top', offset:[0,-10] });
+    legLayers.push(layer);
+  }
+
+  legs.forEach(function(leg){
+    if (leg.type === 'cruise'){
+      var pts = leg.route.map(function(id){
+        var s = getStop(id);
+        return [s.lat, s.lng];
+      });
+      var line = L.polyline(pts, {
+        color: leg.color,
+        weight: leg.weight || 2.8,
+        opacity: 0.70,
+        dashArray: leg.dash || null,
+        lineCap: 'round',
+      });
+      addLegLayer(line, leg);
+      return;
+    }
+
+    var sFrom = getStop(leg.from);
+    var sTo = getStop(leg.to);
+    if (!sFrom || !sTo) return;
+
+    var pts = (leg.type === 'flight') ? flightArc([sFrom.lat, sFrom.lng], [sTo.lat, sTo.lng]) : [[sFrom.lat, sFrom.lng], [sTo.lat, sTo.lng]];
+    var line = L.polyline(pts, {
+      color: leg.color,
+      weight: leg.weight || 2.8,
+      opacity: (leg.type === 'drive') ? 0.55 : 0.80,
+      dashArray: leg.dash || null,
+      lineCap: 'round',
+    });
+    addLegLayer(line, leg);
   });
 
-  // Cruise route (solid magenta)
-  var cruiseRoute = [
-    [-27.38, 153.12],
-    [-21.0, 152.5],
-    [-16.3, 150.0],
-    [-16.92, 145.77],
-    [-20.27, 148.72],
-    [-24.0, 151.5],
-    [-27.38, 153.12],
-  ];
+  // ── Stats ───────────────────────────────────────────────────────────────
+  var flightCount = legs.filter(function(l){ return l.type === 'flight'; }).length;
+  var trainCount  = legs.filter(function(l){ return l.type === 'train'; }).length;
+  var cruiseLeg   = legs.find(function(l){ return l.type === 'cruise'; });
+  document.getElementById('statFlights').textContent = flightCount + ' legs';
+  document.getElementById('statTrains').textContent = trainCount + ' legs';
+  document.getElementById('statCruise').textContent = (cruiseLeg ? cruiseLeg.duration : '—');
 
-  L.polyline(cruiseRoute, {
-    color: '#e056a0',
-    weight: 2.5,
-    opacity: 0.65,
-    smoothFactor: 2,
-  }).addTo(map);
-
-  // Drives (faint white dashed)
-  var drives = [
-    [[-27.38, 153.12], [-28.21, 153.27]],
-    [[-28.21, 153.27], [-26.84, 152.96]],
-    [[-26.84, 152.96], [-27.38, 153.12]],
-  ];
-
-  drives.forEach(function(d) {
-    L.polyline(d, {
-      color: 'rgba(255,255,255,0.25)',
-      weight: 1.5,
-      dashArray: '4 6',
-    }).addTo(map);
+  // ── UI Buttons ──────────────────────────────────────────────────────────
+  document.getElementById('btnReset').addEventListener('click', function(){
+    map.flyTo([8, -170], 3, { duration: 0.8 });
+    setPanel('TIP', 'rgba(255,255,255,0.55)', 'Explore the trip', 'Click a stop or travel leg', [
+      {k:'Labels', v: (labelMode === 'all' ? 'all visible' : 'auto-hide overlaps')},
+      {k:'Stops', v: 'major + ports'},
+      {k:'Travel legs', v: 'layovers consolidated'},
+    ]);
+    setActiveStop(null);
   });
 
-} // end buildMap
+  document.getElementById('btnShowAll').addEventListener('click', function(){
+    labelMode = 'all';
+    scheduleLabelPass();
+    setPanel('LABELS', '#fff', 'All labels visible', 'Tip: zoom in for clarity', [
+      {k:'Mode', v: 'show all'},
+      {k:'Best at', v: 'zoom 4–6'},
+    ]);
+  });
+
+  document.getElementById('btnAuto').addEventListener('click', function(){
+    labelMode = 'auto';
+    scheduleLabelPass();
+    setPanel('LABELS', '#fff', 'Auto label mode', 'Overlapping labels hide automatically', [
+      {k:'Mode', v: 'auto'},
+      {k:'Logic', v: 'priority + collision'},
+    ]);
+  });
+
+  // Start with Brisbane selected (nice initial context)
+  setActiveStop('bne');
+}
 </script>
+
 </body>
 </html>
