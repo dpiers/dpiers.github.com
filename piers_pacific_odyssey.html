@@ -219,12 +219,16 @@
     bottom: 20px;
     z-index: 1300;
     width: min(380px, calc(100vw - 40px));
+    max-height: calc(100vh - 40px);
+    display: flex;
+    flex-direction: column;
     background: rgba(10,14,26,0.88);
     backdrop-filter: blur(14px);
     border-radius: 16px;
     border: 1px solid rgba(255,255,255,0.10);
     box-shadow: var(--shadow);
     overflow: hidden;
+    transition: transform 180ms ease, opacity 180ms ease, width 180ms ease, max-height 180ms ease;
   }
   #panel .p-head{
     padding: 12px 14px 10px 14px;
@@ -260,6 +264,10 @@
     color: rgba(255,255,255,0.72);
     font-size: 12px;
     line-height: 1.5;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
   }
   #panel .p-body .kv{
     display:flex;
@@ -294,6 +302,81 @@
   .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.16); }
   .btn:active{ transform: translateY(0px); }
 
+  /* Panel header controls + mobile-friendly collapse/hide */
+  #panel .p-controls{
+    display:flex;
+    gap: 8px;
+    pointer-events: auto;
+  }
+  .iconbtn{
+    pointer-events: auto;
+    cursor: pointer;
+    user-select: none;
+    width: 34px;
+    height: 34px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.70);
+    font-weight: 900;
+    font-size: 14px;
+    line-height: 1;
+    transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+  }
+  .iconbtn:hover{
+    transform: translateY(-1px);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.16);
+  }
+  .iconbtn:active{ transform: translateY(0px); }
+
+  #panel.collapsed{
+    width: min(260px, calc(100vw - 40px));
+  }
+  #panel.collapsed .p-body,
+  #panel.collapsed .p-actions{
+    display: none;
+  }
+  #panel.collapsed .p-date{
+    display: none;
+  }
+  #panel.hidden{
+    transform: translateY(calc(100% + 26px));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #panelFab{
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1350;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 999px;
+    background: rgba(10,14,26,0.88);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: var(--shadow2);
+    color: rgba(255,255,255,0.78);
+    font-weight: 900;
+    font-size: 11px;
+    letter-spacing: 0.25px;
+    cursor: pointer;
+    user-select: none;
+  }
+  #panelFab.show{ display: flex; }
+  #panelFab .dot{
+    width: 8px; height: 8px; border-radius: 999px;
+    background: rgba(255,255,255,0.55);
+  }
+  #panelFab:active{ transform: translateY(1px); }
+
   /* Tiny attribution */
   #attrib{
     position: fixed;
@@ -315,7 +398,9 @@
   @media (max-width: 720px){
     #stats{ max-width: 240px; }
     #title-overlay .title{ font-size: 26px; }
-    #panel{ right: 12px; bottom: 12px; width: min(360px, calc(100vw - 24px)); }
+    #panel{ right: 12px; bottom: 12px; width: min(320px, calc(100vw - 24px)); max-height: 42vh; }
+    #panel.collapsed{ width: min(220px, calc(100vw - 24px)); }
+    #panelFab{ right: 12px; bottom: 12px; }
     #legend{ left: 12px; bottom: 12px; }
     #title-overlay{ left: 12px; top: 12px; }
     #stats{ right: 12px; top: 12px; }
@@ -356,6 +441,10 @@
       <div class="p-name" id="pName">Explore the trip</div>
       <div class="p-date" id="pDate">Click a stop or travel leg</div>
     </div>
+    <div class="p-controls">
+      <button class="iconbtn" type="button" id="btnPanelToggle" aria-label="Collapse panel" aria-expanded="true" title="Collapse">▾</button>
+      <button class="iconbtn" type="button" id="btnPanelHide" aria-label="Hide panel" title="Hide">✕</button>
+    </div>
   </div>
   <div class="p-body" id="pBody">
     <div class="kv"><div class="k">Labels</div><div class="v">auto-hide when overlapping</div></div>
@@ -367,6 +456,11 @@
     <div class="btn" id="btnShowAll">Show all labels</div>
     <div class="btn" id="btnAuto">Auto label</div>
   </div>
+</div>
+
+<div id="panelFab" role="button" tabindex="0" aria-label="Show details">
+  <div class="dot"></div>
+  Details
 </div>
 
 <script>
@@ -855,6 +949,91 @@ var stops = [
       {k:'Logic', v: 'priority + collision'},
     ]);
   });
+
+  // ── Panel collapse / hide (mobile-friendly) ─────────────────────────────
+  var panelEl = document.getElementById('panel');
+  var fabEl = document.getElementById('panelFab');
+  var btnPanelToggle = document.getElementById('btnPanelToggle');
+  var btnPanelHide = document.getElementById('btnPanelHide');
+
+  function updatePanelToggle(){
+    var collapsed = panelEl.classList.contains('collapsed');
+    btnPanelToggle.textContent = collapsed ? '▴' : '▾';
+    btnPanelToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    btnPanelToggle.setAttribute('aria-label', collapsed ? 'Expand panel' : 'Collapse panel');
+    btnPanelToggle.title = collapsed ? 'Expand' : 'Collapse';
+  }
+
+  function setCollapsed(collapsed){
+    if (collapsed) panelEl.classList.add('collapsed');
+    else panelEl.classList.remove('collapsed');
+    updatePanelToggle();
+    try { localStorage.setItem('panelCollapsed', collapsed ? '1' : '0'); } catch(e) {}
+  }
+
+  function hidePanel(){
+    panelEl.classList.add('hidden');
+    fabEl.classList.add('show');
+    try { localStorage.setItem('panelHidden', '1'); } catch(e) {}
+  }
+
+  function showPanel(){
+    panelEl.classList.remove('hidden');
+    fabEl.classList.remove('show');
+    try { localStorage.removeItem('panelHidden'); } catch(e) {}
+  }
+
+  btnPanelToggle.addEventListener('click', function(e){
+    e.stopPropagation();
+    setCollapsed(!panelEl.classList.contains('collapsed'));
+  });
+
+  btnPanelHide.addEventListener('click', function(e){
+    e.stopPropagation();
+    hidePanel();
+  });
+
+  fabEl.addEventListener('click', function(){
+    showPanel();
+  });
+  fabEl.addEventListener('keydown', function(ev){
+    if (ev.key === 'Enter' || ev.key === ' '){
+      ev.preventDefault();
+      showPanel();
+    }
+  });
+
+  function applyPanelDefaults(){
+    var mobile = window.matchMedia('(max-width: 720px)').matches;
+
+    var hiddenPref = null;
+    var collapsedPref = null;
+    try {
+      hiddenPref = localStorage.getItem('panelHidden');
+      collapsedPref = localStorage.getItem('panelCollapsed');
+    } catch(e) {}
+
+    if (hiddenPref === '1'){
+      hidePanel();
+      return;
+    } else {
+      showPanel();
+    }
+
+    if (collapsedPref === null){
+      // Default: collapsed on mobile, expanded on desktop
+      if (mobile) panelEl.classList.add('collapsed');
+      else panelEl.classList.remove('collapsed');
+      updatePanelToggle();
+    } else {
+      if (collapsedPref === '1') panelEl.classList.add('collapsed');
+      else panelEl.classList.remove('collapsed');
+      updatePanelToggle();
+    }
+  }
+
+  applyPanelDefaults();
+  window.addEventListener('resize', function(){ applyPanelDefaults(); });
 
   // Start with Brisbane selected (nice initial context)
   setActiveStop('bne');
