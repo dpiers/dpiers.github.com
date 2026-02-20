@@ -466,7 +466,7 @@
       <button type="button" class="iconbtn" id="btnHide" aria-label="Hide panel" title="Hide">✕</button>
     </div>
   </div>
-  <div class="p-body id="pBody">
+  <div class="p-body" id="pBody">
     <div class="kv"><div class="k">Labels</div><div class="v">auto-hide when overlapping</div></div>
     <div class="kv"><div class="k">Stops</div><div class="v">major + ports</div></div>
     <div class="kv"><div class="k">Travel legs</div><div class="v">layovers consolidated</div></div>
@@ -484,32 +484,102 @@
 </div>
 
 <script>
+
+function $(id){ return document.getElementById(id); }
+
+function showLoading(msg){
+  var el = $('loading');
+  if (!el) return;
+  el.style.display = 'flex';
+  el.style.whiteSpace = 'normal';
+  el.textContent = msg || 'Loading map…';
+}
+
+function showError(msg){
+  var el = $('loading');
+  if (!el) return;
+  el.style.display = 'flex';
+  el.style.whiteSpace = 'pre-wrap';
+  el.style.padding = '24px';
+  el.style.textAlign = 'center';
+  el.style.lineHeight = '1.4';
+  el.textContent = msg;
+}
+
 function loadCSS(url) {
-  return new Promise(function(resolve) {
+  return new Promise(function(resolve, reject) {
     var link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = url;
     link.onload = resolve;
-    link.onerror = resolve;
+    link.onerror = function(){ reject(new Error('CSS failed: ' + url)); };
     document.head.appendChild(link);
   });
 }
+
 function loadJS(url) {
   return new Promise(function(resolve, reject) {
     var s = document.createElement('script');
     s.src = url;
     s.onload = resolve;
-    s.onerror = reject;
+    s.onerror = function(){ reject(new Error('JS failed: ' + url)); };
     document.head.appendChild(s);
   });
 }
 
+function withTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise(function(_, reject){
+      setTimeout(function(){ reject(new Error('Timeout after ' + ms + 'ms')); }, ms);
+    })
+  ]);
+}
+
+async function ensureLeaflet(){
+  if (window.L && window.L.map) return;
+
+  var providers = [
+    { name:'cdnjs',
+      css:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
+      js:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js' },
+    { name:'unpkg',
+      css:'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+      js:'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js' }
+  ];
+
+  for (var i = 0; i < providers.length; i++){
+    var p = providers[i];
+    try{
+      await withTimeout(loadCSS(p.css), 8000);
+      await withTimeout(loadJS(p.js), 8000);
+      if (window.L && window.L.map) return;
+    }catch(err){
+      console.warn('Leaflet load failed via ' + p.name, err);
+    }
+  }
+
+  throw new Error('Could not load the mapping library (Leaflet).');
+}
+
 (async function init() {
-  await loadCSS('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css');
-  await loadJS('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js');
-  document.getElementById('loading').style.display = 'none';
-  buildMap();
+  try{
+    showLoading('Loading map…');
+    await ensureLeaflet();
+    if ($('loading')) $('loading').style.display = 'none';
+    buildMap();
+  }catch(err){
+    console.error(err);
+    showError(
+      'Map failed to load.\n\n' +
+      'Most common causes:\n' +
+      '• A cached older HTML file (try hard refresh or open in a private tab)\n' +
+      '• A content blocker/network blocking Leaflet CDN requests\n\n' +
+      'Tip: try adding “?v=2” to the URL once to bypass cache.'
+    );
+  }
 })();
+
 
 function buildMap() {
 
@@ -583,12 +653,11 @@ var stops = [
       detail:"Whitsundays stop (depart 18:30)",
       labelDir:"left", priority: 40 },
 
-{ n:8, id:"gco", name:"Gold Coast (Paradise Resort)", lat:-28.00, lng:sLng(153.43), icon:"🏨", color:"#f8b500", size:"minor",
-  tag:"HOTEL", tagColor:"#f8b500",
-  date:"Jul 11 – Jul 13 · 2 nights",
-  detail:"Paradise Resort Gold Coast",
-  labelDir:"right", priority: 44 },
-
+    { n:8, id:"gco", name:"Gold Coast (Paradise Resort)", lat:-28.00, lng:sLng(153.43), icon:"🏨", color:"#f8b500", size:"minor",
+      tag:"HOTEL", tagColor:"#f8b500",
+      date:"Jul 11 – Jul 13 · 2 nights",
+      detail:"Paradise Resort Gold Coast",
+      labelDir:"right", priority: 44 },
 
     { n:9, id:"hkg", name:"Hong Kong", lat:22.32, lng:sLng(114.17), icon:"🏰", color:"#e056a0", size:"major",
       tag:"DISNEY", tagColor:"#e056a0",
@@ -614,7 +683,16 @@ var stops = [
       detail:"Fantasy Springs Hotel · DisneySea & Disneyland",
       labelDir:"top", priority: 85 },
 
-    { n:13, id:"hnl", name:"O‘ahu (Aulani)", lat:21.34, lng:-158.12, ic    { id:"f1", type:"flight", color:"#4ecdc4", dash:"8 6", weight:2.8,
+    { n:13, id:"hnl", name:"O‘ahu (Aulani)", lat:21.34, lng:-158.12, icon:"🌺", color:"#00cec9", size:"major",
+      tag:"AULANI", tagColor:"#00cec9",
+      date:"Jul 21 – Jul 27 · 6 nights",
+      detail:"Ko Olina · DVC 1BR Ocean View Villa",
+      labelDir:"bottom", priority: 92 },
+  ];
+
+    // Travel legs (layovers consolidated)
+  var legs = [
+    { id:"f1", type:"flight", color:"#4ecdc4", dash:"8 6", weight:2.8,
       from:"sea", to:"bne",
       title:"Flight · Seattle → Brisbane",
       when:"Jun 23–25",
@@ -649,21 +727,19 @@ var stops = [
       duration:"7 nights",
       detail:"Brisbane roundtrip with port stops" },
 
-{ id:"d4", type:"drive", color:"rgba(255,255,255,0.25)", dash:"4 7", weight:1.6,
-  from:"bne", to:"gco",
-  title:"Drive · Brisbane → Gold Coast",
-  when:"Jul 11",
-  duration:"≈1h",
-  detail:"Paradise Resort (Surfers Paradise)" },
+    { id:"d4", type:"drive", color:"rgba(255,255,255,0.25)", dash:"4 7", weight:1.6,
+      from:"bne", to:"gco",
+      title:"Drive · Brisbane → Gold Coast",
+      when:"Jul 11",
+      duration:"—",
+      detail:"To Paradise Resort (Surfers Paradise)" },
 
-{ id:"d5", type:"drive", color:"rgba(255,255,255,0.25)", dash:"4 7", weight:1.6,
-  from:"gco", to:"bne",
-  title:"Drive · Gold Coast → Brisbane",
-  when:"Jul 13",
-  duration:"≈1h",
-  detail:"Return toward Brisbane / airport" },
-
-
+    { id:"d5", type:"drive", color:"rgba(255,255,255,0.25)", dash:"4 7", weight:1.6,
+      from:"gco", to:"bne",
+      title:"Drive · Gold Coast → Brisbane",
+      when:"Jul 13",
+      duration:"—",
+      detail:"Return to Brisbane" },
 
     { id:"f2", type:"flight", color:"#4ecdc4", dash:"8 6", weight:2.8,
       from:"bne", to:"hkg",
@@ -698,14 +774,6 @@ var stops = [
       title:"Flight · Tokyo (HND) → Honolulu",
       when:"Jul 21",
       duration:"7h 55m",
-      detail:"Nonstop" },
-
-    { id:"f5", type:"flight", color:"#4ecdc4", dash:"8 6", weight:2.8,
-      from:"hnl", to:"sea",
-      title:"Flight · Honolulu → Seattle",
-      when:"Jul 27–28 (overnight)",
-      duration:"5h 40m",
-      detail:"Nonstop" }, duration:"7h 55m",
       detail:"Nonstop" },
 
     { id:"f5", type:"flight", color:"#4ecdc4", dash:"8 6", weight:2.8,
